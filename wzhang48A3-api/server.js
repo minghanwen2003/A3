@@ -1,0 +1,49 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import eventsRouter from './routes/events.js';
+import categoriesRouter from './routes/categories.js';
+import registrationsRouter from './routes/registrations.js';
+import { query } from './db.js';
+
+dotenv.config();
+
+const app = express();
+const origins = [process.env.CLIENT_ORIGIN, process.env.ADMIN_ORIGIN].filter(Boolean);
+const apiPrefixes = ['/api', '/backend/api'];
+
+app.use(cors({ origin: origins.length ? origins : true }));
+app.use(express.json({ limit: '50kb' }));
+
+app.get(apiPrefixes.map((prefix) => `${prefix}/health`), async (_req, res, next) => {
+  try {
+    await query('SELECT 1 AS ok');
+    res.json({ data: { status: 'ok' } });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get(apiPrefixes.map((prefix) => `${prefix}/organization`), async (_req, res, next) => {
+  try {
+    const rows = await query('SELECT * FROM organizations ORDER BY id LIMIT 1');
+    res.json({ data: rows[0] || null });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.use(apiPrefixes.map((prefix) => `${prefix}/events`), eventsRouter);
+app.use(apiPrefixes.map((prefix) => `${prefix}/categories`), categoriesRouter);
+app.use(apiPrefixes.map((prefix) => `${prefix}/registrations`), registrationsRouter);
+
+app.use((error, _req, res, _next) => {
+  console.error(error);
+  if (error.code === 'ER_DUP_ENTRY') {
+    return res.status(409).json({ error: { message: 'This email is already registered for this event.' } });
+  }
+  res.status(error.status || 500).json({ error: { message: error.expose ? error.message : 'Internal server error.' } });
+});
+
+const port = Number(process.env.PORT || 3000);
+app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
