@@ -6,18 +6,9 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 const port = Number(process.env.PORT || 5500);
-const applicationPrefix = '/client';
-
-function localPath(url) {
-  const requested = decodeURIComponent((url || '/').split('?')[0]);
-  if (requested === applicationPrefix || requested.startsWith(`${applicationPrefix}/`)) {
-    return requested.slice(applicationPrefix.length) || '/';
-  }
-  return requested;
-}
 
 http.createServer((req, res) => {
-  const requested = localPath(req.url);
+  const requested = decodeURIComponent((req.url || '/').split('?')[0]);
   const file = path.join(root, requested === '/' ? 'index.html' : requested);
   if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     res.writeHead(404); return res.end('Not found');

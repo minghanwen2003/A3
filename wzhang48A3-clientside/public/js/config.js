@@ -1,4 +1,4 @@
 window.APP_CONFIG = {
-  API_BASE: 'https://24833109.it.scu.edu.au/backend/api',
-  ADMIN_URL: 'https://24833109.it.scu.edu.au/admin/'
+  API_BASE: 'http://localhost:3000/api',
+  ADMIN_URL: 'http://localhost:5501'
 };
