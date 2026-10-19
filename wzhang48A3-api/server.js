@@ -10,12 +10,11 @@ dotenv.config();
 
 const app = express();
 const origins = [process.env.CLIENT_ORIGIN, process.env.ADMIN_ORIGIN].filter(Boolean);
-const apiPrefixes = ['/api', '/backend/api'];
 
 app.use(cors({ origin: origins.length ? origins : true }));
 app.use(express.json({ limit: '50kb' }));
 
-app.get(apiPrefixes.map((prefix) => `${prefix}/health`), async (_req, res, next) => {
+app.get('/api/health', async (_req, res, next) => {
   try {
     await query('SELECT 1 AS ok');
     res.json({ data: { status: 'ok' } });
@@ -24,7 +23,7 @@ app.get(apiPrefixes.map((prefix) => `${prefix}/health`), async (_req, res, next)
   }
 });
 
-app.get(apiPrefixes.map((prefix) => `${prefix}/organization`), async (_req, res, next) => {
+app.get('/api/organization', async (_req, res, next) => {
   try {
     const rows = await query('SELECT * FROM organizations ORDER BY id LIMIT 1');
     res.json({ data: rows[0] || null });
@@ -33,9 +32,9 @@ app.get(apiPrefixes.map((prefix) => `${prefix}/organization`), async (_req, res,
   }
 });
 
-app.use(apiPrefixes.map((prefix) => `${prefix}/events`), eventsRouter);
-app.use(apiPrefixes.map((prefix) => `${prefix}/categories`), categoriesRouter);
-app.use(apiPrefixes.map((prefix) => `${prefix}/registrations`), registrationsRouter);
+app.use('/api/events', eventsRouter);
+app.use('/api/categories', categoriesRouter);
+app.use('/api/registrations', registrationsRouter);
 
 app.use((error, _req, res, _next) => {
   console.error(error);

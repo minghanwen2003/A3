@@ -18,4 +18,3 @@ export async function query(sql, params = []) {
   const [rows] = await pool.execute(sql, params);
   return rows;
 }
-// Fixed data sync issue between admin and client on Oct 14
